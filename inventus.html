@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Inventory User</title>
+        <link rel="stylesheet" href="bootstrap-4.5.3-dist/css/bootstrap.css">
+        <style>
+            body {
+                background-color: rgb(0, 133, 200);
+            }
+            #container {
+                margin-top: 20pt;
+            }
+            table {
+                border: 1px solid black;
+            }
+            #buyerDash {
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <h3 id="buyerDash"></h3>
+            <table border="2" class="table mt-4">
+                <thead class="bg-secondary text-light">
+                    <th>S/N</th>
+                    <th>NAME</th>
+                    <th>QUANTITY</th>
+                    <th>PRICE</th>
+                    <th>QUANTITY TO BUY</th>
+                    <th>TOTAL PRICE</th>
+                    <th>PRODUCT IMAGE</th>
+                    <th>VENDOR</th>
+                </thead>
+                <tbody id="tbody" class="bg-info text-light"></tbody>
+            </table>
+            <center id="checkout">
+                <h3 id="goodsBought"></h3>
+                <button class="font-weight-bold btn bg-dark text-light" onclick="checkout()">CHECKOUT</button>
+            </center>
+        </div>
+        
+        <script type="text/javascript">
+            let buyer = JSON.parse(localStorage.getItem("buyer"));
+            if(buyer) {
+                let buyerName = buyer[0].buyer;
+                buyerDash.innerText = buyerName + "'s Dashboard"; 
+            };
+
+            if (!buyer) {
+                location.href = "login.html";
+            };
+            
+            let admin = JSON.parse(localStorage.getItem("user"));
+            var store = [];
+            
+            if (admin) {
+                for (let u = 0; u < admin.length; u++) {
+                    if(admin[u].status == 1) {
+                        var keeper = JSON.parse(localStorage.getItem(admin[u].username));
+                        if (keeper) {
+                           for (let z = 0; z < keeper.length; z++) {
+                                let nam = keeper[z].name 
+                                let qty = keeper[z].quantity;
+                                let pri = keeper[z].price;
+                                let adm = keeper[z].adminName;    
+
+                                let good = {name: nam, quantity: qty, price:pri, admin: adm};
+
+                                store.push(good);
+                            };
+                        };
+                    };
+                };
+                localStorage.setItem("stock", JSON.stringify(store));
+            };
+            var loc = JSON.parse(localStorage.getItem("stock"));
+            var newQuantity = [];
+            
+            if (buyerDash.innerText !== "") {
+                for (var i = 0; i < loc.length; i++) {
+                var serNumber = i + 1;
+                tbody.innerHTML += 
+                    "<tr> \
+                        <td>"+serNumber+"</td> \
+                        <td id='name"+i+"'>"+loc[i].name+"</td> \
+                        <td id='stockQty"+i+"'>"+loc[i].quantity+ "</td> \
+                        <td id='price"+i+"'>"+loc[i].price+"</td> \
+                        <td> <input id='qty"+i+"'oninput='totalPrice("+i+")' /> </td> \
+                        <td id='total"+i+"'> </td> \
+                        <td> </td> \
+                        <td id='admin"+i+"'>"+loc[i].admin+" </td> \
+                    </tr>";
+                };
+            };
+            function totalPrice (i) {
+                var stockQty = document.getElementById("stockQty"+i);
+                var price = document.getElementById("price"+i).innerText;
+                var totalFinal = document.getElementById("total"+i);
+                var quantity = document.getElementById("qty"+i).value;
+                
+                if (+quantity > stockQty.innerText) {
+                    totalFinal.innerText = "Out of Stock";
+                } else if (+quantity <= stockQty.innerText) {
+                    totalFinal.innerText = price * quantity;
+                };
+            };
+// checkout button
+            const checkout = ()=> {
+                let newQuantity = [];
+                let oldQty = JSON.parse(localStorage.stock);
+                
+                for (let t = 0; t < loc.length; t++) {
+                    var name = document.getElementById("name"+t);
+                    var finalTotal = document.getElementById("total"+t);
+                    var qty = document.getElementById("qty"+t);
+                    var stocQty = document.getElementById("stockQty"+t);
+                    var price = document.getElementById("price"+t);
+                    var adminName = document.getElementById("admin"+t);
+                    
+                    var olQty = loc[t].quantity;
+                    var finalQty = qty.value;
+                    var restQty = {name: name.innerText, price: price.innerText, quantity: olQty - finalQty, adminName: adminName.innerText};
+                
+                    if (finalTotal.innerText == "Out of Stock") {
+                        return;      
+                    } else {
+                        goodsBought.innerText = "Goods bought successfully";
+                        qty.value = "";
+                        newQuantity.push(restQty);
+                        localStorage.newQty = JSON.stringify(newQuantity);
+                    };
+                
+                }
+            };
+        </script>
+    </body>
+</html>

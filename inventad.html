@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Inventory Admin</title>
+        <link rel="stylesheet" href="bootstrap-4.5.3-dist/css/bootstrap.css">
+        <style>
+            #container {
+                margin-top: 10pt;
+            }
+            #name1, #quantity, #price {
+                width: 200pt !important;
+                display: inline !important;
+            }
+            h1 {
+                color: #fff;
+                font-weight: bolder;
+                text-align: center;
+            }
+            h5 {
+                text-align: center;
+            }
+            #addGoods {
+                margin-top: -5px;
+            }
+            td input {
+                background-color: rgb(0,123,255);
+                color: #fff;
+                font-size: 1em;
+                width: 170pt !important; 
+            }
+            button {
+                background-color: rgb(0,123,255);
+                border-color: #fff;
+                color: #fff;
+                font-weight: bold;
+                font-size: 1.2em;
+            }
+            #sellerDash {
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body style="background-color: orange;" onload="update()">
+        <div id="container">
+            <h1>INVENTORY SYSTEM</h1>
+            <h5 id="sellerDash"></h5>
+            <div class="mt-3">
+                <input type="text" id="name1" placeholder="Name" class="form-control">
+                <input type="number" id="quantity" placeholder="Quantity" class="form-control">
+                <input type="number" id="price" placeholder="Price" class="form-control">
+                <button onclick="addGoods()" class="btn font-weight-bold bg-info text-light" id="addGoods">ADD GOODS</button>
+                <button class="btn font-weight-bold bg-info text-light">LOG OUT</button>
+            </div>
+            <table id="myTable" border="2" class="table mt-3" >
+                <thead class="bg-secondary text-light">
+                    <th>S/N</th>
+                    <th>NAME</th>
+                    <th>QUANTITY</th>
+                    <th>PRICE</th>
+                    <th>TOTAL PRICE</th>
+                    <th>PRODUCT IMAGE</th>
+                    <th>EDIT</th>
+                    <th>DELETE</th>
+                </thead>
+                <tbody id="tbody" class="bg-primary text-light"></tbody>
+            </table>
+            
+        </div>
+
+        <script type="text/javascript">
+            let adminLogger = JSON.parse(localStorage.getItem("admin"));
+            var newQty = JSON.parse(localStorage.getItem("newQty"));
+            var userInfo = [];
+            var serialNum = 1;
+            var i = 0;
+            
+            if (adminLogger) {
+                var adminName = adminLogger[0].adminName;
+                sellerDash.innerText = adminName + "'s Dashboard";
+                var adm = JSON.parse(localStorage.getItem(adminName));
+            };
+            
+            if(!adminLogger) {
+                location.href = "login.html";
+            };
+            const update = ()=> {
+                if (adm) {
+                    userInfo = adm;
+                    for (i = 0; i < userInfo.length; i++) {
+                        if  (newQty) {
+                            for (let b = 0; b < newQty.length; b++) {
+                                if (newQty[b].name == userInfo[i].name && newQty[b].price == userInfo[i].price && newQty[b].adminName == adminName) {
+                                    userInfo[i] = newQty[b];
+                                    localStorage.setItem(adminName, JSON.stringify(userInfo));
+                                };
+                            };
+                        };  
+                        tbody.innerHTML += 
+                            "<tr> \
+                                <td id='serNum"+i+"'>"+ serialNum++ +" </td> \
+                                <td id='namer"+i+"'> <input value='"+ userInfo[i].name+"' id='editName"+i+"'disabled /> </td> \
+                                <td id='quantity"+i+"'> <input value='"+userInfo[i].quantity +"' id='editQuantity"+i+"'disabled </td> \
+                                <td id='price"+i+"'> <input value='"+userInfo[i].price+ "' id='editPrice"+i+"' disabled /> </td> \
+                                <td id='total"+i+"'>"+userInfo[i].quantity * userInfo[i].price +" </td> \
+                                <td> </td> \
+                                <td> <button id='editButton"+i+"'onclick='editor("+i+")'>EDIT</button> </td>  \
+                                <td> <button onclick='del("+i+")'>DELETE</button> </td> \
+                            </tr>";    
+                    }; 
+                };
+            };
+// add goods
+            const addGoods = ()=> {
+                while (i < Infinity) {
+                    i++;
+                    if (name1.value !== "" && quantity.value !== "" && price.value !== "") {
+
+                        tbody.innerHTML += 
+                            "<tr> \
+                                <td id='serNum"+i+"'>"+ serialNum++ +" </td> \
+                                <td id='namer"+i+"'> <input value='"+ name1.value+"' id='editName"+i+"'disabled /> </td> \
+                                <td id='quantity"+i+"'> <input value='"+quantity.value +"' id='editQuantity"+i+"'disabled </td> \
+                                <td id='price"+i+"'> <input value='"+price.value+ "' id='editPrice"+i+"' disabled /> </td> \
+                                <td id='total"+i+"'>"+quantity.value * price.value +" </td> \
+                                <td> </td> \
+                                <td> <button id='editButton"+i+"'onclick='editor("+i+")'>EDIT</button> </td> \
+                                <td> <button onclick='del("+i+")'>DELETE</button></td> \
+                            </tr>";
+                            
+                        var table = {};
+                        table.name = name1.value;
+                        table.quantity = quantity.value;
+                        table.price = price.value;
+                        table.adminName = adminName;
+                        userInfo.push(table);
+
+                        name1.value = "";
+                        quantity.value = "";
+                        price.value = "";
+
+                        localStorage.setItem(adminName, JSON.stringify(userInfo));
+                        break;
+                    };
+                };
+            };
+
+// edit button
+            const editor = ed=> {
+                let editName = document.getElementById("editName"+ed);
+                let editQuantity = document.getElementById("editQuantity"+ed);
+                let editPrice = document.getElementById("editPrice"+ed);
+                let total = document.getElementById("total"+ed);
+                let edButton = document.getElementById("editButton"+ed);
+                // console.log(userInfo)
+                if (edButton.innerHTML == "EDIT") {
+                    editName.disabled = false;
+                    editQuantity.disabled = false;
+                    editPrice.disabled = false;                    
+                    edButton.innerHTML = "ADD GOOD";
+                    var d = userInfo.find(skip => skip.name == editName.value && skip.quantity == editQuantity.value && skip.price == editPrice.value && skip.adminName == adminName);
+                    // console.log(d)
+                } else if (edButton.innerHTML == "ADD GOOD") {
+                    let editNew = editName.value;
+                    let editQty = editQuantity.value;
+                    let editPri = editPrice.value;
+                    let newInfo = {name: editNew, quantity: editQty, price: editPri, adminName: adminName};
+                    d = newInfo;
+                    // userInfo[ed] = newInfo;
+
+                    total.innerHTML = editQty * editPri;
+                    
+                    localStorage.setItem(adminName, JSON.stringify(userInfo));
+                    
+                    editName.disabled = true;
+                    editQuantity.disabled = true;
+                    editPrice.disabled = true;
+                    edButton.innerHTML = "EDIT";
+                };
+            };
+            
+// delete button
+            const del = deleTe=> {
+                i--;
+                let deleting = JSON.parse(localStorage.getItem(adminName));
+                let newGoods = deleting.filter((_, i)=> i !== deleTe);
+                let newUser = userInfo.filter((_, i)=> i !== deleTe);
+                userInfo = newUser;
+                localStorage.setItem(adminName, JSON.stringify(newGoods));
+                
+                tbody.innerHTML = "";
+
+                let adminDelete = JSON.parse(localStorage.getItem(adminName));
+                serialNum = 1;
+
+                for (let d = 0; d < adminDelete.length; d++) {
+                    tbody.innerHTML += 
+                        "<tr> \
+                            <td>"+ serialNum++ +" </td> \
+                            <td id='namer"+d+"'> <input value='"+ adminDelete[d].name+"' id='editName"+d+"'disabled /> </td> \
+                            <td id='quantity"+d+"'> <input value='"+adminDelete[d].quantity+"' id='editQuantity"+d+"'disabled </td> \
+                            <td id='price"+d+"'> <input value='"+adminDelete[d].price+ "' id='editPrice"+d+"' disabled /> </td> \
+                            <td id='total"+d+"'>"+adminDelete[d].quantity * adminDelete[d].price +" </td> \
+                            <td> </td> <td> <button id='editButton"+d+"'onclick='editor("+d+")'>EDIT</button> </td> \
+                            <td> <button onclick='del("+d+")'>DELETE</button> </td> \
+                        </tr>";
+                };
+            };
+        </script>
+    </body>
+</html>
